@@ -11,6 +11,7 @@ Prefer email? Write to <a href="mailto:contact@parvek.ai" data-astro-cid-22lyktt
         anything you type into a form on this page until you submit it.
 <a href="/privacy#cookies" data-astro-cid-uz2wdcl7>Read the cookie and privacy notice</a>.
 </p> </div> <div class="ck-act" data-astro-cid-uz2wdcl7> <button type="button" class="btn ck-ok" id="ck-ok" data-astro-cid-uz2wdcl7>Got it</button> </div> </div> </div>   </body></html> <script>(function(){const endpoint = "https://formsubmit.co/ajax/contact@parvek.ai";
+const email = "contact@parvek.ai";
 
   const TIER_ANNUAL = { basic: 120, standard: 180, advanced: 216 };
   const TIER_NAME = { basic: 'Basic', standard: 'Standard', advanced: 'Advanced' };
@@ -93,9 +94,36 @@ Prefer email? Write to <a href="mailto:contact@parvek.ai" data-astro-cid-22lyktt
         throw new Error(data.message || 'failed');
       }
     } catch (err) {
+      // Relay down: hand over a mailto already carrying their answers —
+      // including the computed estimate fields — rather than losing the
+      // lead and everything they typed. Inlined rather than imported
+      // because define:vars scripts are not bundled as modules.
+      const SKIP = new Set(['_subject', '_template', '_captcha', '_honey', '_next']);
+      const subject = 'Site assessment request — PARVEK';
+      const lines = [subject, ''];
+      fd.forEach((value, key) => {
+        if (SKIP.has(key)) return;
+        const v = typeof value === 'string' ? value.trim() : '';
+        if (!v) return;
+        const l = key.replace(/[_-]+/g, ' ').trim();
+        lines.push(l.charAt(0).toUpperCase() + l.slice(1) + ': ' + v);
+      });
+
       status.style.display = 'block';
-      status.style.color = '#c0392b';
-      status.textContent = 'Something went wrong sending that. Please email contact@parvek.ai and we will pick it up.';
+      status.style.color = '';
+      status.innerHTML = '';
+      const msg = document.createElement('p');
+      msg.style.cssText = 'margin:0 0 12px;color:#c2410c;font-size:14px;line-height:1.6';
+      msg.textContent =
+        'We could not send this automatically — our form service is not responding. Nothing you typed is lost: the button below opens an email with all of it filled in.';
+      const a = document.createElement('a');
+      a.className = 'btn';
+      a.style.cssText = 'display:inline-block';
+      a.href = 'mailto:' + email
+        + '?subject=' + encodeURIComponent(subject)
+        + '&body=' + encodeURIComponent(lines.join('\n'));
+      a.textContent = 'Send this as an email instead';
+      status.append(msg, a);
     } finally {
       btn.disabled = false;
       btn.textContent = original;
