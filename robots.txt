@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://parvekshak.com/sitemap-index.xml
+Sitemap: https://parvek.ai/sitemap-index.xml
